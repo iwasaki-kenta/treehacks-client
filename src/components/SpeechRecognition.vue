@@ -15,6 +15,9 @@
 
     <textarea class="textarea" placeholder="Messages go here..." v-model="message"></textarea>
     <br/>
+
+    <code>{{intent}}</code>
+    <br/>
   </div>
 </template>
 
@@ -57,7 +60,7 @@
   export default {
     name: 'voice-recognition',
     data() {
-      return {status: 0, message: ""}
+      return {status: 0, message: "", intent: "none"}
     },
     methods: {
       statusText: function () {
@@ -90,7 +93,7 @@
             audioRecorder = new Recorder(gainMonitor);
 
             websocket = new WebSocket("wss://cog-web-wu.azurewebsites.net/cognitive-services/ws/speechtotextdemo?language=en-US&g_Recaptcha_Response=null&isNeedVerify=false");
-            websocket.onerror = function (event) {
+            websocket.onerror = (event) => {
               stopRecording(self);
               websocket.close();
             };
@@ -110,6 +113,21 @@
                 const text = message; // textDisplay +
                 if (header == 'f') { // Finished speaking!
                   // TODO: Send to IBM Watson for intent recognition.
+                  console.log(this.$http)
+                  this.$http.get('http://cors-anywhere.herokuapp.com/https://gateway.watsonplatform.net/natural-language-classifier/api/v1/classifiers/f5b432x172-nlc-4276/classify', {
+                    params: {
+                      text
+                    },
+                    headers: {
+                      Authorization: 'Basic YzA5MTQ1MjktYjA1Zi00MmQ2LWFlMzUtZjM3NGQ3OTk3M2IyOmhqRFN5N095TmRoSQ==',
+                      'X-Requested-With': 'http://www.treehacks.com'
+                    },
+                    emulateJSON: true
+                  }).then((data) => {
+                    data = data.body;
+                    self.intent = data.top_class;
+                    console.log(data)
+                  });
                   stopRecording(self);
                 }
 

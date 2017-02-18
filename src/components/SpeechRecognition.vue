@@ -1,8 +1,20 @@
 <template xmlns:v-on="http://www.w3.org/1999/xhtml">
-  <div class="content">
-    <span>{{statusText()}}</span> <br/><a class="button" v-on:click="listen">{{status == 0 ? "Listen" : "Stop"}}</a>
-    <br/><br/>
-    <textarea class="textarea" placeholder="Messages go here...">{{message}}</textarea>
+  <div class="container">
+    <div class="level">
+      <div class="level-left">
+        <div class="level-item">
+          <span>{{statusText()}}</span>
+        </div>
+      </div>
+      <div class="level-right">
+        <div class="level-item">
+          <a class="button" v-on:click="listen">{{status == 0 ? "Listen" : "Stop"}}</a>
+        </div>
+      </div>
+    </div>
+
+    <textarea class="textarea" placeholder="Messages go here..." v-model="message"></textarea>
+    <br/>
   </div>
 </template>
 
@@ -97,7 +109,8 @@
               else {
                 const text = message; // textDisplay +
                 if (header == 'f') { // Finished speaking!
-//                textDisplay = text + " ";
+                  // TODO: Send to IBM Watson for intent recognition.
+                  stopRecording(self);
                 }
 
                 console.log(text);

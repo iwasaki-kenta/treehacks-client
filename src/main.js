@@ -4,6 +4,10 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 
+import 'variables.sass';
+import 'bulma/bulma.sass';
+
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

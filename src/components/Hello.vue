@@ -1,12 +1,14 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
+    <voice></voice>
     <canvas id="editor" width="800" height="600"></canvas>
   </div>
 </template>
 
 <script>
   import SocketIO from 'socket.io-client';
+  import SpeechRecognition from "./SpeechRecognition";
   import {fabric} from 'fabric';
 
   let socket, canvas;
@@ -30,14 +32,15 @@
       socket.on('preview', (data) => {
         const img = new Image();
         img.onload = () => {
-            const frame = new fabric.Image(img);
-            canvas.setBackgroundImage(frame)
-            canvas.renderAll();
+          const frame = new fabric.Image(img);
+          canvas.setBackgroundImage(frame)
+          canvas.renderAll();
         }
         img.src = "data:image/jpg;base64," + data;
 
       });
-    }
+    },
+    components: {'voice': SpeechRecognition}
   }
 </script>
 
@@ -66,7 +69,7 @@
   }
 
   canvas {
-    border: 1px solid black;,
-  margin: 0 auto !important;
+    border: 1px solid black;
+    margin: 0 auto !important;
   }
 </style>

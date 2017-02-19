@@ -260,6 +260,9 @@
         formData.append('scale', 2);
         formData.append('file', new Blob([ab], {type: 'image/jpeg'}));
 
+        self.resEnabled = false;
+        $("#superRes").attr('src', '');
+
         this.$http.post('http://cors-anywhere.herokuapp.com/http://waifu2x.udp.jp/api',
           formData,
           {

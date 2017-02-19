@@ -23,6 +23,7 @@
     "velocity-animate": "^1.4.2",
     "velocity-ui-pack": "^1.2.2",
     "vue": "^2.1.10",
+    "vue-bulma-modal": "^1.0.1",
     "vue-carousel": "^0.6.1",
     "vue-color": "^2.0.6",
     "vue-resource": "^1.2.0",

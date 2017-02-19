@@ -1,4 +1,4 @@
-<template xmlns:v-on="http://www.w3.org/1999/xhtml">
+<template xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
   <div id="dream">
     <div class="container">
       <span class="title is-3">Sketch out your ideal handbag.</span>
@@ -40,12 +40,45 @@
         </div>
       </div>
 
+      <br/>
+
+      <a class="button is-primary is-large" v-on:click="exportDesign">Export Design</a>
+
+      <div class="modal" v-bind:class="{'is-active': exportDialog}">
+        <div class="modal-background" v-on:click="exportDialog = false"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Export Fashion Design</p>
+            <button class="delete"></button>
+          </header>
+          <section class="modal-card-body">
+            <div class="columns">
+              <div class="column is-2">
+                <img id="design"/>
+              </div>
+              <div class="column">
+                <div>
+                  <span class="tag is-medium is-black" v-for="tag in exportKeywords" style="margin-right: 8px; margin-bottom: 8px; font-family: monospace;">{{tag}}</span>
+                </div>
+              </div>
+            </div>
+
+          </section>
+          <footer class="modal-card-foot">
+            <a class="button is-success" v-on:click="exportDialog = false">Deliver</a>
+            <a class="button">Cancel</a>
+          </footer>
+        </div>
+      </div>
+
+      <br/><br/><br/>
     </div>
     <br/>
   </div>
 </template>
 
 <script>
+  import {Modal, ImageModal, CardModal} from 'vue-bulma-modal'
   import SocketIO from 'socket.io-client';
   import {Photoshop} from 'vue-color';
   import {fabric} from 'fabric';
@@ -53,11 +86,11 @@
 
   let socket, canvas_sketch, canvas_color;
 
-  function exportData(id) {
+  function exportData(id, dimensions = 64) {
     const destinationCanvas = document.createElement("canvas");
-    destinationCanvas.width = destinationCanvas.height = 64;
-
+    destinationCanvas.width = destinationCanvas.height = dimensions;
     const context = destinationCanvas.getContext('2d');
+
 
     context.fillStyle = "black";
     context.fillRect(0, 0, destinationCanvas.width, destinationCanvas.height);
@@ -67,11 +100,27 @@
     return destinationCanvas.toDataURL({format: 'image/png'}).split("base64,")[1];
   }
 
+  function scaleBitmap(id, dimensions = 64) {
+    const destinationCanvas = document.createElement("canvas");
+    destinationCanvas.width = destinationCanvas.height = dimensions;
+    const context = destinationCanvas.getContext('2d');
+
+
+    context.fillStyle = "black";
+    context.fillRect(0, 0, destinationCanvas.width, destinationCanvas.height);
+
+    context.drawImage(document.getElementById(id), 0, 0, destinationCanvas.width, destinationCanvas.height);
+
+    return destinationCanvas.toDataURL({format: 'image/png'}).split("base64,")[1];
+  }
+
   export default {
     name: 'dream',
     data () {
       return {
         updating: false,
+        exportDialog: false,
+        exportKeywords: [],
         colors: {
           hex: '#194d33',
           hsl: {
@@ -164,6 +213,7 @@
 
       socket.on("frame", (data) => {
         $(".img").attr('src', "data:image/jpg;base64," + data);
+        $("#design").attr('src', "data:image/jpg;base64," + data);
         socket.emit('draw', null, null)
 
       });
@@ -172,15 +222,34 @@
       })
     },
     methods: {
-      export() {
-        console.log();
-      },
       onColorChange(val) {
         this.colors = val;
         canvas_color.freeDrawingBrush.color = val.hex;
+      },
+      exportDesign() {
+        const self = this;
+
+        this.exportDialog = true;
+        this.$http.post('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAqUI5qbMQj8eet6SkyLYpIm8mdB86p2U4', {
+          requests: [
+            {
+              image: {
+                content: scaleBitmap("design", 512)
+              },
+              features: [{
+                type: 'LABEL_DETECTION',
+                maxResults: 10,
+              }]
+            }
+          ]
+        }).then((data) => {
+          data = _.map(data.body.responses[0].labelAnnotations, 'description');
+          self.exportKeywords = data;
+          console.log(data);
+        })
       }
     },
-    components: {'chrome-color': Photoshop}
+    components: {'chrome-color': Photoshop, 'card-modal': CardModal}
   }
 </script>
 
@@ -204,6 +273,11 @@
     z-index: 2;
     width: 368px;
     height: 368px;
+  }
+
+  #design {
+    width: 64px;
+    height: 64px;
   }
 
   .overlay-container {

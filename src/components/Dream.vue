@@ -57,8 +57,23 @@
                 <img id="design"/>
               </div>
               <div class="column">
+                <span class="fa fa-cog fa-spin fa-2x fa-fw" v-if="!exportKeywords[0]"></span>
                 <div>
-                  <span class="tag is-medium is-black" v-for="tag in exportKeywords" style="margin-right: 8px; margin-bottom: 8px; font-family: monospace;">{{tag}}</span>
+                  <span class="tag is-medium is-black" v-for="tag in exportKeywords"
+                        style="margin-right: 8px; margin-bottom: 8px; font-family: monospace;">{{tag}}</span>
+                </div>
+                <br/>
+
+                <div class="columns">
+                  <div class="column is-4">
+                    <span class="fa fa-cog fa-spin fa-2x fa-fw" v-if="!resEnabled"></span>
+                    <img id="superRes" />
+                  </div>
+
+                  <div class="column">
+                    <blockquote style="font-family: monospace;" v-if="resEnabled">I polished up your design for you and increased the resolution of what I had in mind.</blockquote>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -120,6 +135,7 @@
       return {
         updating: false,
         exportDialog: false,
+        resEnabled: false,
         exportKeywords: [],
         colors: {
           hex: '#194d33',
@@ -230,6 +246,38 @@
         const self = this;
 
         this.exportDialog = true;
+
+        const payload = atob(scaleBitmap("design"));
+
+        var ab = new ArrayBuffer(payload.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < payload.length; i++) {
+          ia[i] = payload.charCodeAt(i);
+        }
+
+        var formData = new FormData();
+        formData.append('noise', 2);
+        formData.append('scale', 2);
+        formData.append('file', new Blob([ab], {type: 'image/jpeg'}));
+
+        this.$http.post('http://cors-anywhere.herokuapp.com/http://waifu2x.udp.jp/api',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'X-Requested-With': 'http://www.treehacks.com'
+            }
+          }).then((res) => {
+          res = res.body;
+          var a = new FileReader();
+          a.onload = (e) => {
+            $("#superRes").attr('src', e.target.result);
+            self.resEnabled = true;
+          }
+          a.readAsDataURL(res);
+        })
+
+        self.exportKeywords = []
         this.$http.post('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAqUI5qbMQj8eet6SkyLYpIm8mdB86p2U4', {
           requests: [
             {
